@@ -212,6 +212,23 @@ iptables_do_command(const char *format, ...)
 	return rc;
 }
 
+/** @internal */
+int
+_iptables_fw_create_chain(const char table[], const char chain[]) {
+  int rc = 0;
+  rc = iptables_do_command("-t %s -N %s", table, chain);
+  if (rc == 0) {
+    return rc;
+  } else if (rc == 1) {
+    rc = iptables_do_command("-t %s -F %s", table, chain);
+    if (rc == 0) {
+      return rc;
+    }
+  }
+  debug(LOG_ERR, "Failed to create or flush chain %s in table %s", chain, table);
+  return 1;
+}
+
 /**
  * @internal
  * Compiles a struct definition of a firewall rule into a valid iptables
@@ -439,11 +456,11 @@ iptables_fw_init(void)
 	 */
 
 	/* Create new chains in the mangle table */
-	rc |= iptables_do_command("-t mangle -N " CHAIN_TRUSTED); /* for marking trusted packets */
-	rc |= iptables_do_command("-t mangle -N " CHAIN_BLOCKED); /* for marking blocked packets */
-	rc |= iptables_do_command("-t mangle -N " CHAIN_ALLOWED); /* for marking allowed packets */
-	rc |= iptables_do_command("-t mangle -N " CHAIN_INCOMING); /* for counting incoming packets */
-	rc |= iptables_do_command("-t mangle -N " CHAIN_OUTGOING); /* for marking authenticated packets, and for counting outgoing packets */
+	rc |= _iptables_fw_create_chain("mangle", CHAIN_TRUSTED); /* for marking trusted packets */
+  rc |= _iptables_fw_create_chain("mangle", CHAIN_BLOCKED); /* for marking blocked packets */
+ 	rc |= _iptables_fw_create_chain("mangle", CHAIN_ALLOWED); /* for marking allowed packets */
+ 	rc |= _iptables_fw_create_chain("mangle", CHAIN_INCOMING); /* for counting incoming packets */
+ 	rc |= _iptables_fw_create_chain("mangle", CHAIN_OUTGOING); /* for marking authenticated packets, and for counting outgoing packets */
 
 	/* Assign jumps to these new chains */
 	rc |= iptables_do_command("-t mangle -I PREROUTING 1 -i %s -s %s -j " CHAIN_OUTGOING, gw_interface, gw_iprange);
@@ -498,7 +515,7 @@ iptables_fw_init(void)
 	 
 	if (!config->ip6) {
 		/* Create new chains in nat table */
-		rc |= iptables_do_command("-t nat -N " CHAIN_OUTGOING);
+    rc |= _iptables_fw_create_chain("nat", CHAIN_OUTGOING);
 
 		/*
 		 * nat PREROUTING chain
@@ -531,11 +548,11 @@ iptables_fw_init(void)
 	 */
 
 	// Create new chains in the filter table
-	rc |= iptables_do_command("-t filter -N " CHAIN_TO_INTERNET);
-	rc |= iptables_do_command("-t filter -N " CHAIN_TO_ROUTER);
-	rc |= iptables_do_command("-t filter -N " CHAIN_AUTHENTICATED);
-	rc |= iptables_do_command("-t filter -N " CHAIN_TRUSTED);
-	rc |= iptables_do_command("-t filter -N " CHAIN_TRUSTED_TO_ROUTER);
+ 	rc |= _iptables_fw_create_chain("filter", CHAIN_TO_INTERNET);
+	rc |= _iptables_fw_create_chain("filter", CHAIN_TO_ROUTER);
+	rc |= _iptables_fw_create_chain("filter", CHAIN_AUTHENTICATED);
+	rc |= _iptables_fw_create_chain("filter", CHAIN_TRUSTED);
+	rc |= _iptables_fw_create_chain("filter", CHAIN_TRUSTED_TO_ROUTER);
 
 	/*
 	 * filter INPUT chain
