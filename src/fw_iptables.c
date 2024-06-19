@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <syslog.h>
 #include <errno.h>
 #include <string.h>
@@ -213,7 +214,7 @@ iptables_do_command(const char *format, ...)
 }
 
 /** @internal */
-int
+static int
 _iptables_fw_create_chain(const char table[], const char chain[]) {
   int rc = 0;
   rc = iptables_do_command("-t %s -N %s", table, chain);
@@ -393,6 +394,7 @@ iptables_fw_init(void)
 	t_MAC *pa;
 	int rc = 0;
 	int macmechanism;
+  bool skip_fw_entry_creation;
 
 	debug(LOG_NOTICE, "Initializing firewall rules");
 
@@ -424,6 +426,7 @@ iptables_fw_init(void)
 	FW_MARK_BLOCKED = config->fw_mark_blocked;
 	FW_MARK_TRUSTED = config->fw_mark_trusted;
 	FW_MARK_AUTHENTICATED = config->fw_mark_authenticated;
+  skip_fw_entry_creation = config->skip_fw_entry_creation;
 	UNLOCK_CONFIG();
 
 	iptables_version = get_iptables_version();
@@ -462,12 +465,13 @@ iptables_fw_init(void)
  	rc |= _iptables_fw_create_chain("mangle", CHAIN_INCOMING); /* for counting incoming packets */
  	rc |= _iptables_fw_create_chain("mangle", CHAIN_OUTGOING); /* for marking authenticated packets, and for counting outgoing packets */
 
+  if(!skip_fw_entry_creation) {
 	/* Assign jumps to these new chains */
-	rc |= iptables_do_command("-t mangle -I PREROUTING 1 -i %s -s %s -j " CHAIN_OUTGOING, gw_interface, gw_iprange);
-	rc |= iptables_do_command("-t mangle -I PREROUTING 2 -i %s -s %s -j " CHAIN_BLOCKED, gw_interface, gw_iprange);
-	rc |= iptables_do_command("-t mangle -I PREROUTING 3 -i %s -s %s -j " CHAIN_TRUSTED, gw_interface, gw_iprange);
-	rc |= iptables_do_command("-t mangle -I POSTROUTING 1 -o %s -d %s -j " CHAIN_INCOMING, gw_interface, gw_iprange);
-
+  	rc |= iptables_do_command("-t mangle -I PREROUTING 1 -i %s -s %s -j " CHAIN_OUTGOING, gw_interface, gw_iprange);
+  	rc |= iptables_do_command("-t mangle -I PREROUTING 2 -i %s -s %s -j " CHAIN_BLOCKED, gw_interface, gw_iprange);
+  	rc |= iptables_do_command("-t mangle -I PREROUTING 3 -i %s -s %s -j " CHAIN_TRUSTED, gw_interface, gw_iprange);
+  	rc |= iptables_do_command("-t mangle -I POSTROUTING 1 -o %s -d %s -j " CHAIN_INCOMING, gw_interface, gw_iprange);
+  }
 	/* Rules to mark as trusted MAC address packets in mangle PREROUTING */
 	for (; pt != NULL; pt = pt->next) {
 		rc |= iptables_trust_mac(pt->mac);
@@ -522,7 +526,9 @@ iptables_fw_init(void)
 		 */
 
 		// packets coming in on gw_interface jump to CHAIN_OUTGOING
-		rc |= iptables_do_command("-t nat -I PREROUTING -i %s -s %s -j " CHAIN_OUTGOING, gw_interface, gw_iprange);
+    if (!skip_fw_entry_creation) {
+		  rc |= iptables_do_command("-t nat -I PREROUTING -i %s -s %s -j " CHAIN_OUTGOING, gw_interface, gw_iprange);
+    }
 		// CHAIN_OUTGOING, packets marked TRUSTED  ACCEPT
 		rc |= iptables_do_command("-t nat -A " CHAIN_OUTGOING " -m mark --mark 0x%x%s -j RETURN", FW_MARK_TRUSTED, markmask);
 		// CHAIN_OUTGOING, packets marked AUTHENTICATED  ACCEPT
@@ -559,7 +565,9 @@ iptables_fw_init(void)
 	 */
 
 	// packets coming in on gw_interface jump to CHAIN_TO_ROUTER
-	rc |= iptables_do_command("-t filter -I INPUT -i %s -s %s -j " CHAIN_TO_ROUTER, gw_interface, gw_iprange);
+  if (expression) {
+    rc |= iptables_do_command("-t filter -I INPUT -i %s -s %s -j " CHAIN_TO_ROUTER, gw_interface, gw_iprange);
+  }
 	// CHAIN_TO_ROUTER packets marked BLOCKED DROP
 	rc |= iptables_do_command("-t filter -A " CHAIN_TO_ROUTER " -m mark --mark 0x%x%s -j DROP", FW_MARK_BLOCKED, markmask);
 	// CHAIN_TO_ROUTER, invalid packets DROP
@@ -613,7 +621,9 @@ iptables_fw_init(void)
 	 */
 
 	// packets coming in on gw_interface jump to CHAIN_TO_INTERNET
-	rc |= iptables_do_command("-t filter -I FORWARD -i %s -s %s -j " CHAIN_TO_INTERNET, gw_interface, gw_iprange);
+  if (!skip_fw_entry_creation) {
+    rc |= iptables_do_command("-t filter -I FORWARD -i %s -s %s -j " CHAIN_TO_INTERNET, gw_interface, gw_iprange);
+  }
 	// CHAIN_TO_INTERNET packets marked BLOCKED DROP
 	rc |= iptables_do_command("-t filter -A " CHAIN_TO_INTERNET " -m mark --mark 0x%x%s -j DROP", FW_MARK_BLOCKED, markmask);
 	// CHAIN_TO_INTERNET, invalid packets DROP

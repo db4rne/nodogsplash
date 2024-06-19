@@ -33,6 +33,7 @@
 #include <pthread.h>
 
 #include <string.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <sys/stat.h>
 #include <arpa/inet.h>
@@ -105,7 +106,8 @@ typedef enum {
 	oFWMarkTrusted,
 	oFWMarkBlocked,
 	oBinAuth,
-	oPreAuth
+	oPreAuth,
+  oSkipFWEntryCreation
 } OpCodes;
 
 /** @internal
@@ -156,6 +158,7 @@ static const struct {
 	{ "fw_mark_blocked", oFWMarkBlocked },
 	{ "binauth", oBinAuth },
 	{ "preauth", oPreAuth },
+  { "skip_fw_entry_creation", oSkipFWEntryCreation },
 	{ NULL, oBadOption },
 };
 
@@ -232,6 +235,7 @@ config_init(void)
 	config.ip6 = DEFAULT_IP6;
 	config.binauth = NULL;
 	config.preauth = NULL;
+  config.skip_fw_entry_creation = DEFAULT_SKIP_FW_ENTRY_CREATION;
 
 	/* Set up default FirewallRuleSets, and their empty ruleset policies */
 	rs = add_ruleset("trusted-users");
@@ -938,6 +942,15 @@ config_read(const char *filename)
 				exit(1);
 			}
 			break;
+    case oSkipFWEntryCreation:
+      if ((value = parse_boolean(p1)) != -1) {
+        config.skip_fw_entry_creation = value;
+      } else {
+			  debug(LOG_ERR, "Bad option %s on line %d in %s", s, linenum, filename);
+			  debug(LOG_ERR, "Exiting...");
+        exit(1); 
+      }
+      break;
 		case oBadOption:
 			debug(LOG_ERR, "Bad option %s on line %d in %s", s, linenum, filename);
 			debug(LOG_ERR, "Exiting...");
@@ -947,7 +960,7 @@ config_read(const char *filename)
 	}
 
 	fclose(fd);
-
+  debug(LOG_INFO, "Skipping firewall entry creation: %d", config.skip_fw_entry_creation);
 	debug(LOG_INFO, "Done reading configuration file '%s'", filename);
 }
 

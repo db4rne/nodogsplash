@@ -88,6 +88,7 @@
 #define DEFAULT_EMPTY_AUTHENTICATED_USERS_POLICY "RETURN"
 #define DEFAULT_EMPTY_PREAUTHENTICATED_USERS_POLICY "REJECT"
 #define DEFAULT_IP6 0
+#define DEFAULT_SKIP_FW_ENTRY_CREATION 0
 /*@}*/
 
 /**
@@ -183,6 +184,7 @@ typedef struct {
 	int ip6;			/**< @brief enable IPv6 */
 	char *binauth;			/**< @brief external authentication program */
 	char *preauth;			/**< @brief external preauthentication program */
+  bool skip_fw_entry_creation;
 } s_config;
 
 /** @brief Get the current gateway configuration */
