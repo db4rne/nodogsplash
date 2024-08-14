@@ -41,6 +41,7 @@
 #include <arpa/inet.h>
 #include <arpa/inet.h>
 #include <nftables/libnftables.h>
+#include <string.h>
 
 #include "common.h"
 
@@ -145,6 +146,43 @@ int
 _nftables_check_mark_masking()
 {
 	return 0;
+}
+
+int
+get_nft_rule_handle(char *buf){
+  char *ptr;
+  ptr = strstr(buf, "# handle ");
+  if (ptr == NULL) {
+    return -1;
+  }
+  ptr += strlen("# handle ");
+
+  return atoi(ptr);
+}
+
+int
+nftables_add_rule_with_handle(const char *format, ...)
+{
+	va_list vlist;
+	char *fmt_cmd = NULL;
+	int i;
+  int handle;
+  char buf[8192];
+  FILE *fp;
+
+	va_start(vlist, format);
+	safe_vasprintf(&fmt_cmd, format, vlist);
+	va_end(vlist);
+
+  nft_ctx_output_set_flags(nft, NFT_CTX_OUTPUT_ECHO | NFT_CTX_OUTPUT_HANDLE);
+  buf[0] = 0;
+  fp = fmemopen(buf, sizeof(buf), "w+");
+  nft_ctx_set_output(nft, fp);
+  nft_run_cmd_from_buffer(nft, fmt_cmd);
+  fclose(fp);
+	free(fmt_cmd);
+
+  return get_nft_rule_handle(buf);
 }
 
 /** @internal */
@@ -278,9 +316,9 @@ _iptables_append_ruleset(const char table[], const char ruleset[], const char ch
 }
 
 int
-nftables_block_mac(const char mac[])
+nftables_block_mac(client *client)
 {
-  return nftables_do_command("\'add rule ip mangle " CHAIN_BLOCKED " ether saddr %s counter meta mark set 0x%x\'", mac, FW_MARK_BLOCKED);
+  return nftables_add_rule_with_handle("\'add rule ip mangle " CHAIN_BLOCKED " ether saddr %s counter meta mark set 0x%x\'", mac, FW_MARK_BLOCKED);
 }
 
 int
@@ -292,11 +330,11 @@ iptables_unblock_mac(const char mac[])
 int
 nftables_allow_mac(const char mac[])
 {
-  return nftables_do_command("\'insert rule ip mangle " CHAIN_BLOCKED " ether saddr %mac coutner return\'", mac);
+  return nftables_add_rule_with_handle("\'insert rule ip mangle " CHAIN_BLOCKED " ether saddr %mac coutner return\'", mac);
 }
 
 int
-iptables_unallow_mac(const char mac[])
+nftables_unallow_mac(const char mac[])
 {
 	return iptables_do_command("-t mangle -D " CHAIN_BLOCKED " -m mac --mac-source %s -j RETURN", mac);
 }
@@ -304,7 +342,7 @@ iptables_unallow_mac(const char mac[])
 int
 nftables_trust_mac(const char mac[])
 {
-  return nftables_do_command("\'add rule ip mangle " CHAIN_TRUSTED " ether saddr %s counter meta mark set 0x%x \'", mac, FW_MARK_TRUSTED);
+  return nftables_add_rule_with_handle("\'add rule ip mangle " CHAIN_TRUSTED " ether saddr %s counter meta mark set 0x%x \'", mac, FW_MARK_TRUSTED);
 }
 
 int
