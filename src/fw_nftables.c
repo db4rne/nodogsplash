@@ -204,6 +204,7 @@ nftables_do_command(const char *format, ...)
 
 	ipversion = config->ip6 ? "ip6" : "ip";
 
+  nft_ctx_output_set_flags(nft, 0);
   nft_run_cmd_from_buffer(nft, fmt_cmd);
 
 	free(fmt_cmd);
@@ -316,7 +317,7 @@ _iptables_append_ruleset(const char table[], const char ruleset[], const char ch
 }
 
 int
-nftables_block_mac(client *client)
+nftables_block_mac(const char mac[])
 {
   return nftables_add_rule_with_handle("\'add rule ip mangle " CHAIN_BLOCKED " ether saddr %s counter meta mark set 0x%x\'", mac, FW_MARK_BLOCKED);
 }

@@ -1,4 +1,4 @@
-/********************************************************************\
+//********************************************************************\
  * This program is free software; you can redistribute it and/or    *
  * modify it under the terms of the GNU General Public License as   *
  * published by the Free Software Foundation; either version 2 of   *
@@ -544,7 +544,7 @@ iptables_fw_init(void)
 	/*
 	 * End of nat table chains and rules (ip4 only)
 	 **************************************
-	 */
+	 *
 
 	/*
 	 *
@@ -565,7 +565,7 @@ iptables_fw_init(void)
 	 */
 
 	// packets coming in on gw_interface jump to CHAIN_TO_ROUTER
-  if (expression) {
+  if (!skip_fw_entry_creation) {
     rc |= iptables_do_command("-t filter -I INPUT -i %s -s %s -j " CHAIN_TO_ROUTER, gw_interface, gw_iprange);
   }
 	// CHAIN_TO_ROUTER packets marked BLOCKED DROP
