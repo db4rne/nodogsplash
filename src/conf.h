@@ -29,6 +29,8 @@
 #ifndef _CONF_H_
 #define _CONF_H_
 
+#include <stdint.h>
+
 #define VERSION "5.0.2"
 
 /*@{*/
@@ -129,6 +131,7 @@ typedef struct _firewall_ruleset_t {
  */
 typedef struct _MAC_t {
 	char *mac;
+  uint32_t handle;
 	struct _MAC_t *next;
 } t_MAC;
 
@@ -225,8 +228,8 @@ int is_blocked_mac(const char *mac);
 int is_allowed_mac(const char *mac);
 int is_trusted_mac(const char *mac);
 
-int add_to_blocked_mac_list(const char possiblemac[]);
-int remove_from_blocked_mac_list(const char possiblemac[]);
+int add_to_blocked_mac_list(const char possiblemac[], uint32_t *handleptr);
+int remove_from_blocked_mac_list(const char possiblemac[], uint32_t *handleptr);
 
 int add_to_allowed_mac_list(const char possiblemac[]);
 int remove_from_allowed_mac_list(const char possiblemac[]);

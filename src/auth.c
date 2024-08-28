@@ -385,12 +385,17 @@ int
 auth_client_block(const char *mac)
 {
 	int rc = -1;
+  uint32_t *handleptr;
 
 	LOCK_CONFIG();
 
-	if (!add_to_blocked_mac_list(mac) && !iptables_block_mac(mac)) {
-		rc = 0;
-	}
+  rc = iptables_block_mac(mac, handleptr);
+  if (rc) {
+    if (!add_to_blocked_mac_list(mac, *handleptr)) {
+      rc = 0;
+    }
+  }
+
 
 	UNLOCK_CONFIG();
 
@@ -401,12 +406,14 @@ int
 auth_client_unblock(const char *mac)
 {
 	int rc = -1;
-
+  uint32_t *handleptr;
 	LOCK_CONFIG();
 
-	if (!remove_from_blocked_mac_list(mac) && !iptables_unblock_mac(mac)) {
-		rc = 0;
-	}
+  rc = remove_from_blocked_mac_list(mac, handleptr);
+	
+  if(rc) {
+    rc = iptables_unblock_mac(mac, handleptr);
+  }
 
 	UNLOCK_CONFIG();
 

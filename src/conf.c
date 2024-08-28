@@ -231,7 +231,7 @@ config_init(void)
 	config.macmechanism = DEFAULT_MACMECHANISM;
 	config.fw_mark_authenticated = DEFAULT_FW_MARK_AUTHENTICATED;
 	config.fw_mark_trusted = DEFAULT_FW_MARK_TRUSTED;
-	config.fw_mark_blocked = DEFAULT_FW_MARK_BLOCKED;
+config.fw_mark_blocked = DEFAULT_FW_MARK_BLOCKED;
 	config.ip6 = DEFAULT_IP6;
 	config.binauth = NULL;
 	config.preauth = NULL;
@@ -1150,7 +1150,7 @@ int is_trusted_mac(const char *mac)
 /* Add given MAC address to the config's blocked mac list.
  * Return 0 on success, nonzero on failure
  */
-int add_to_blocked_mac_list(const char possiblemac[])
+int add_to_blocked_mac_list(const char possiblemac[], uint32_t *handleptr)
 {
 	char mac[18];
 	t_MAC *p = NULL;
@@ -1180,6 +1180,7 @@ int add_to_blocked_mac_list(const char possiblemac[])
 	/* Add MAC to head of list */
 	p = safe_malloc(sizeof(t_MAC));
 	p->mac = safe_strdup(mac);
+  p->handle = *handleptr;
 	p->next = config.blockedmaclist;
 	config.blockedmaclist = p;
 	debug(LOG_INFO, "Added MAC address [%s] to blocked list", mac);
@@ -1190,7 +1191,7 @@ int add_to_blocked_mac_list(const char possiblemac[])
 /* Remove given MAC address from the config's blocked mac list.
  * Return 0 on success, nonzero on failure
  */
-int remove_from_blocked_mac_list(const char possiblemac[])
+int remove_from_blocked_mac_list(const char possiblemac[], uint32_t *handleptr)
 {
 	char mac[18];
 	t_MAC **p = NULL;
@@ -1220,6 +1221,7 @@ int remove_from_blocked_mac_list(const char possiblemac[])
 	for (p = &config.blockedmaclist; *p != NULL; p = &((*p)->next)) {
 		if (!strcasecmp((*p)->mac,mac)) {
 			/* found it */
+      *handleptr = (*p)->handle;
 			del = *p;
 			*p = del->next;
 			debug(LOG_INFO, "Removed MAC address [%s] from blocked list", mac);

@@ -148,7 +148,7 @@ _nftables_check_mark_masking()
 	return 0;
 }
 
-int
+unit32_t
 get_nft_rule_handle(char *buf){
   char *ptr;
   ptr = strstr(buf, "# handle ");
@@ -161,7 +161,7 @@ get_nft_rule_handle(char *buf){
 }
 
 int
-nftables_add_rule_with_handle(const char *format, ...)
+nftables_add_rule_with_handle(uint32_t *handleptr, const char *format, ...)
 {
 	va_list vlist;
 	char *fmt_cmd = NULL;
@@ -182,7 +182,8 @@ nftables_add_rule_with_handle(const char *format, ...)
   fclose(fp);
 	free(fmt_cmd);
 
-  return get_nft_rule_handle(buf);
+  &handleptr = get_nft_rule_handle(buf);
+  return 0;
 }
 
 /** @internal */
@@ -317,9 +318,9 @@ _iptables_append_ruleset(const char table[], const char ruleset[], const char ch
 }
 
 int
-nftables_block_mac(const char mac[])
+nftables_block_mac(const char mac[], uint32_t *handleptr)
 {
-  return nftables_add_rule_with_handle("\'add rule ip mangle " CHAIN_BLOCKED " ether saddr %s counter meta mark set 0x%x\'", mac, FW_MARK_BLOCKED);
+  return nftables_add_rule_with_handle(handleptr, "\'add rule ip mangle " CHAIN_BLOCKED " ether saddr %s counter meta mark set 0x%x\'", mac, FW_MARK_BLOCKED);
 }
 
 int
