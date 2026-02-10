@@ -44,7 +44,7 @@
 
 /** Client counter */
 static int client_count = 0;
-static int client_id = 1;
+int client_id = 1;
 
 /** Global mutex to protect access to the client list */
 pthread_mutex_t client_list_mutex = PTHREAD_MUTEX_INITIALIZER;

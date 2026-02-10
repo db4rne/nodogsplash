@@ -3,6 +3,7 @@ CC?=gcc
 CFLAGS?=-O2 -g -Wall
 CFLAGS+=-I../../src
 CFLAGS+= -DWITH_STATE_FILE
+CFLAGS+= -D__NDS_UNIT_TEST
 
 LDLIBS+=-ljson-c
 
