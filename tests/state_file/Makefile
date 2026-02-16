@@ -5,7 +5,7 @@ CFLAGS+=-I../../src
 CFLAGS+= -DWITH_STATE_FILE
 CFLAGS+= -D__NDS_UNIT_TEST
 
-LDLIBS+=-ljson-c
+LDLIBS+=-ljansson
 
 .PHONY: all tests
 
