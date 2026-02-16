@@ -21,15 +21,15 @@
 
 #ifdef WITH_STATE_FILE
 
-#include <json-c/json.h>
+#include <jansson.h>
 
 #include "client_list.h"
 
-int state_file_import_client(json_object *json_client);
+int state_file_import_client(json_t *json_client);
 int state_file_import(const char *path);
 
 int state_file_export(const char *path);
-json_object *state_file_export_client(t_client *client);
+json_t *state_file_export_client(t_client *client);
 
 #endif /* WITH_STATE_FILE */
 #endif /* _STATE_FILE_H_ */

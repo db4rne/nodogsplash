@@ -16,7 +16,7 @@ NDS_OBJS=src/auth.o src/client_list.o src/commandline.o src/conf.o \
 
 ifeq (yes,$(ENABLE_STATE_FILE))
 CFLAGS += -DWITH_STATE_FILE
-LDLIBS += -ljson-c
+LDLIBS += -ljansson
 NDS_OBJS += src/state_file.o
 endif
 
