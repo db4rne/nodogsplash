@@ -109,5 +109,6 @@ void client_list_flush(void);
 } while (0)
 
 extern pthread_mutex_t client_list_mutex;
+extern int client_id;
 
 #endif /* _NDS_CLIENT_LIST_H_ */
