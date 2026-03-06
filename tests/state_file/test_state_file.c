@@ -63,7 +63,6 @@ void validate_client_a(t_client *client)
 	assert(!strcmp(client->mac, "00:16:3e:d8:29:6e"));
 	assert(!strcmp(client->ip, "192.168.42.222"));
 	assert(!strcmp(client->token, "fb843328"));
-	assert(client->id == 1);
 	assert(client->counters.last_updated == 1756220171);
 	assert(client->counters.incoming == 1586);
 	assert(client->counters.outgoing == 918);
@@ -75,7 +74,6 @@ void validate_client_b(t_client *client)
 	assert(!strcmp(client->mac, "00:16:3e:06:e3:7c"));
 	assert(!strcmp(client->ip, "192.168.42.44"));
 	assert(!strcmp(client->token, "49c1fb0e"));
-	assert(client->id == 2);
 	assert(client->counters.last_updated == 1756220222);
 	assert(client->counters.incoming == 6890102);
 	assert(client->counters.outgoing == 113871);
@@ -87,7 +85,6 @@ void validate_client_c(t_client *client)
 	assert(!strcmp(client->mac, "00:16:3e:06:ea:aa"));
 	assert(!strcmp(client->ip, "192.168.42.42"));
 	assert(!strcmp(client->token, "13523b0e"));
-	assert(client->id == 3);
 	assert(client->counters.last_updated == 1756220222);
 	assert(client->counters.incoming == 6890102);
 	assert(client->counters.outgoing == 113871);
@@ -156,9 +153,9 @@ void three_clients(void)
 
 void three_clients_dup_id(void)
 {
-	/* invalid entries are ignored, 2 valid entries, 1 invalid */
+	/* client IDs are ignored on import, resulting in 3 valid clients */
 	assert(state_file_import("three_clients_dup_id.json") == 0);
-	assert(get_client_list_length() == 2);
+	assert(get_client_list_length() == 3);
 	print_client_list();
 }
 
