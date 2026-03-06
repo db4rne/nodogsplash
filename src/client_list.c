@@ -91,9 +91,6 @@ client_list_flush(void)
 	t_client *client = firstclient;
 	t_client *prev = NULL;
 
-	if (client_count == 0)
-		return;
-
 	while (client != NULL) {
 		prev = client;
 		client = client->next;
