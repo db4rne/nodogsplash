@@ -36,6 +36,7 @@ ndsctl: src/ndsctl.o
 clean:
 	rm -f nodogsplash ndsctl src/*.o
 	rm -rf dist
+	$(MAKE) -C ./tests clean
 
 install:
 ifeq (yes,$(STRIP))

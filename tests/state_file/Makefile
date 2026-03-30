@@ -31,3 +31,6 @@ test_state_file: $(TEST_STATE_FILE_OBJECT)
 
 run_test_state_file: test_state_file
 	./test_state_file
+
+clean:
+	rm ./test_state_file
