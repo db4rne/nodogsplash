@@ -3,7 +3,11 @@
 .PHONY: all tests
 all: tests
 
-tests: run_tests_state_file
+tests: run_test_conf run_tests_state_file
+
+# conf tests
+run_test_conf:
+	$(MAKE) -C ./conf/ tests
 
 # state_file tests
 run_tests_state_file:
