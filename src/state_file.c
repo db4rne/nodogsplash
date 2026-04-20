@@ -13,6 +13,7 @@
 #include "auth.h"
 #include "client_list.h"
 #include "debug.h"
+#include "fw_common.h"
 #include "safe.h"
 
 #define NDS_JSON_EXPORT_VERSION 1
@@ -186,7 +187,7 @@ state_file_import_client(json_object *json_client)
 	JSON_GET_FIELD(client->counters.outgoing, err, counters, "outgoing", json_type_int, json_object_get_uint64);
 	JSON_GET_FIELD(client->counters.last_updated, err, counters, "last_updated", json_type_int, json_object_get_uint64);
 
-	unsigned int fw_connection_state = -1;
+	unsigned int fw_connection_state = FW_MARK_PREAUTHENTICATED;
 	JSON_GET_FIELD(fw_connection_state, err, json_client, "fw_connection_state", json_type_int, json_object_get_int64);
 
 	auth_change_state(client, fw_connection_state, "import_state_file");
