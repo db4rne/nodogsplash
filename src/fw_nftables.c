@@ -738,7 +738,7 @@ nftables_fw_counters_update(void)
 									if (ip && mac) {
 										client = client_list_find(mac, ip);
 										if (client) {
-											uint64_t total = bytes;
+											uint64_t total = bytes + client->counters.outgoing_offset;
 											if (total > client->counters.outgoing) {
 												client->counters.outgoing = total;
 												client->counters.last_updated = time(NULL);
@@ -770,7 +770,7 @@ nftables_fw_counters_update(void)
 									if (ip) {
 										client = client_list_find_by_ip(ip);
 										if (client) {
-											uint64_t total = bytes;
+											uint64_t total = bytes + client->counters.incoming_offset;
 											if (total > client->counters.incoming) {
 												client->counters.incoming = total;
 												client->counters.last_updated = time(NULL);
